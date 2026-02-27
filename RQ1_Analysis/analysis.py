@@ -577,30 +577,56 @@ def generate_visualizations(panel, monthly_ts, event_results):
 
     colors = {'High': '#d62728', 'Medium': '#ff7f0e', 'Low': '#2ca02c'}
 
-    # Filter to AI era and compute quarterly averages
-    panel_ai = panel[panel['date'] >= '2020-01-01'].copy()
-    panel_ai['quarter'] = panel_ai['date'].dt.to_period('Q')
+    # Use full date range and monthly averages with fear_index for better coverage
+    # (raw 'fear' has only 4 obs for Medium/Taiwan; fear_index has 56)
+    panel_ts = panel.copy()
+    panel_ts['yearmonth'] = panel_ts['date'].dt.to_period('M')
 
-    quarterly = panel_ai.groupby(['quarter', 'uai_group']).agg(
-        mean_fear=('fear', 'mean'),
+    monthly_fig = panel_ts.groupby(['yearmonth', 'uai_group']).agg(
+        mean_fear=('fear_index', 'mean'),
+        obs=('fear_index', 'count'),
     ).reset_index()
-    quarterly['quarter_dt'] = quarterly['quarter'].dt.to_timestamp()
+    monthly_fig['month_dt'] = monthly_fig['yearmonth'].dt.to_timestamp()
+
+    # Different min-obs thresholds: generous for Medium (Taiwan, sparse data)
+    min_obs = {'High': 5, 'Medium': 1, 'Low': 5}
 
     for group in ['High', 'Medium', 'Low']:
-        g = quarterly[quarterly['uai_group'] == group].sort_values('quarter_dt')
+        g = monthly_fig[(monthly_fig['uai_group'] == group) &
+                        (monthly_fig['obs'] >= min_obs[group])].sort_values('month_dt')
         if len(g) > 0:
-            ax.plot(g['quarter_dt'], g['mean_fear'],
-                    label=f'{group} UAI', color=colors[group], linewidth=1.5)
+            g = g.copy()
+            if group == 'Medium':
+                # Sparse data: show individual points with connecting dashed line
+                ax.scatter(g['month_dt'], g['mean_fear'],
+                           color=colors[group], s=25, alpha=0.7, zorder=5,
+                           label=f'{group} UAI - Taiwan (n={g["obs"].sum()} obs)')
+                ax.plot(g['month_dt'], g['mean_fear'],
+                        color=colors[group], linewidth=1.0, alpha=0.4, linestyle='--')
+            else:
+                # Dense data: rolling 3-month average for smoother lines
+                g['smooth_fear'] = g['mean_fear'].rolling(window=3, min_periods=1, center=True).mean()
+                ax.plot(g['month_dt'], g['smooth_fear'],
+                        label=f'{group} UAI (n={g["obs"].sum():,} obs)',
+                        color=colors[group], linewidth=1.5)
 
-    # Add event markers
+    # Add event markers with labels
+    event_labels = {
+        '2022-11-30': 'ChatGPT', '2023-01-23': 'MS-OpenAI',
+        '2023-05-25': 'NVIDIA Earnings', '2024-06-18': 'NVIDIA #1',
+        '2025-01-27': 'DeepSeek',
+    }
     for event_date_str, event_name in AI_EVENTS.items():
         event_date = pd.to_datetime(event_date_str)
-        if event_date >= pd.to_datetime('2020-01-01'):
-            ax.axvline(x=event_date, color='gray', linestyle='--', alpha=0.4, linewidth=0.8)
+        ax.axvline(x=event_date, color='gray', linestyle='--', alpha=0.4, linewidth=0.8)
+        if event_date_str in event_labels:
+            ymin, ymax = ax.get_ylim()
+            ax.text(event_date, ymax * 0.95, event_labels[event_date_str],
+                    rotation=90, fontsize=7, ha='right', va='top', color='gray', alpha=0.7)
 
-    ax.set_xlabel('Quarter')
-    ax.set_ylabel('Mean Fear Sentiment')
-    ax.set_title('Fear Sentiment by UAI Group (2020-2026)')
+    ax.set_xlabel('Month')
+    ax.set_ylabel('Mean Fear Index (composite)')
+    ax.set_title('Fear Sentiment by UAI Group Over Time')
     ax.legend(loc='upper left')
     ax.grid(True, alpha=0.3)
     plt.tight_layout()

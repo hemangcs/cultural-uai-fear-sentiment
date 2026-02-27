@@ -1,0 +1,9 @@
+country,uai,uai_group,firms,observations,avg_sentiment,avg_fear,avg_uncertainty,avg_buzz
+Australia,51,Low,8,1356,0.1136,0.0518,0.1762,28.132
+Brazil,76,High,12,28860,0.033,0.008,0.0317,2221.8289
+Canada,48,Low,50,66990,0.1905,0.0244,0.0594,58.2266
+Chile,86,High,4,3794,0.1514,0.0877,0.087,17.8192
+Mexico,82,High,6,20837,0.0717,0.0272,0.0562,61.6166
+Taiwan,69,Medium,5,195,0.1223,0.0608,0.014,26.2918
+United Kingdom,35,Low,5,425,0.1503,0.0204,0.0898,33.516
+United States,46,Low,88,801067,0.0781,0.0073,0.0301,1147.9787

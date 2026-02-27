@@ -1,0 +1,20 @@
+# Data files (too large for GitHub)
+Downloads/
+IntnlData/
+*.pkl
+*.zip
+*.xls
+*.xlsx
+
+# Python
+__pycache__/
+*.pyc
+.DS_Store
+
+# Credentials - DO NOT commit
+# Note: API key is in scripts but this is an academic project with expiring credentials
+
+# Large intermediate files
+WVS_*.csv
+GLOBE_*.xls
+hofstede_*.csv

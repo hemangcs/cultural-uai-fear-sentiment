@@ -20,7 +20,7 @@ ASSET_CLASS = "equamer"
 FREQ = "dai"
 START_DATE = "1998-01-01"
 END_DATE = "2026-02-01"
-BASE_DIR = "/Volumes/TOSHIBA EXT/refinitiv-Data/IntnlData"
+BASE_DIR = "/Volumes/TOSHIBA EXT/refinitiv-Data/FinalData-4thMay2026"
 
 
 def download_stock(asset_code, ticker, name, exchange_label):
